@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Meta AI Model">
-    <meta name="author" content="Bapon Kar">
-    <title>Chat with this AI</title>
+    <title>Chat with GROQ API</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/c.min.js"></script>
+
+
     <style>
         :root {
             --background-color: #f0f0f5;
@@ -159,17 +162,17 @@
         const apiKey = "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";
         const chatBox = document.getElementById("chatBox");
         const themeToggle = document.getElementById("themeToggle");
-
+    
         async function sendRequest() {
             const userInput = document.getElementById("userInput").value.trim();
-
+    
             if (!userInput) {
                 alert("Please enter a message.");
                 return;
             }
-
-            chatBox.innerHTML += `<div class="message"><strong>You:</strong> ${userInput}</div>`;
-
+    
+            chatBox.innerHTML += `<div class="message"><strong>You:</strong> ${escapeHTML(userInput)}</div>`;
+    
             const requestBody = {
                 model: "llama3-8b-8192",
                 messages: [
@@ -179,7 +182,7 @@
                     }
                 ]
             };
-
+    
             try {
                 const response = await fetch(apiUrl, {
                     method: "POST",
@@ -189,15 +192,18 @@
                     },
                     body: JSON.stringify(requestBody)
                 });
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+    
                 const data = await response.json();
                 const assistantMessage = data.choices[0]?.message?.content || "No response received.";
-                chatBox.innerHTML += `<div class="message"><strong>Assistant:</strong> ${assistantMessage}</div>`;
-
+    
+                // Format message and append to the chat
+                const formattedMessage = formatMarkdown(assistantMessage);
+                chatBox.innerHTML += `<div class="message"><strong>Assistant:</strong> ${formattedMessage}</div>`;
+    
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -206,14 +212,50 @@
                 document.getElementById("userInput").value = "";
             }
         }
+    
+        function formatMarkdown(message) {
+            // Handle code blocks (triple backticks)
+            message = message.replace(/```([\s\S]*?)```/g, (match, code) => {
+                return `<pre><code class="language-c">${escapeHTML(code.trim())}</code></pre>`;
+            });
 
+            // Handle inline code (single backticks)
+            message = message.replace(/`([^`]+)`/g, (match, inlineCode) => {
+                return `<code>${escapeHTML(inlineCode)}</code>`;
+            });
+
+            // Return formatted message
+            return message.replace(/\n/g, "<br>");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            chatBox.addEventListener("DOMNodeInserted", () => {
+                document.querySelectorAll("pre code").forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            });
+        });
+
+    
+        function escapeHTML(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, (m) => map[m]);
+        }
+    
         document.getElementById("sendRequest").addEventListener("click", sendRequest);
-
+    
         themeToggle.addEventListener("click", () => {
             const currentTheme = document.body.getAttribute("data-theme");
             const newTheme = currentTheme === "light" ? "dark" : "light";
             document.body.setAttribute("data-theme", newTheme);
         });
     </script>
+    
 </body>
 </html>
