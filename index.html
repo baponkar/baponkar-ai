@@ -173,16 +173,19 @@
     
             chatBox.innerHTML += `<div class="message"><strong>You:</strong> ${escapeHTML(userInput)}</div>`;
     
-            const requestBody = {
-                model: "llama3-8b-8192",
-                messages: [
-                    {
-                        role: "user",
-                        content: userInput
-                    }
-                ]
-            };
-    
+     const requestBody = {
+    model: "llama3-8b-8192",
+    messages: [
+        {
+            role: "system",
+            content: "You are Baponkar AI, a helpful and friendly assistant developed to assist users with their queries."
+        },
+        {
+            role: "user",
+            content: userInput
+        }
+    ]
+};
             try {
                 const response = await fetch(apiUrl, {
                     method: "POST",
